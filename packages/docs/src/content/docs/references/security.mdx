@@ -46,15 +46,17 @@ The deployment guides are examples, not recommended production configurations. R
 
 ### Self-hosted Gremlin Server
 
-In Apache TinkerPop 3.x, Gremlin Server uses the `gremlin-groovy` script engine by default. It can run arbitrary code on the server, not only Gremlin traversals. TinkerPop treats this as intended and leaves restricting it to the server operator. Other databases built on Gremlin Server may also enable Groovy by default.
+Apache TinkerPop has long recommended against using Groovy to process Gremlin in Gremlin Server. Its [Protecting Script Execution](https://tinkerpop.apache.org/docs/3.8.2/reference/#script-execution) guidance says that any deployment that might receive scripts from untrusted sources should disable `GremlinGroovyScriptEngine` and expose Gremlin only through `GremlinLangScriptEngine` or bytecode. In TinkerPop 4.0, `gremlin-lang` replaces `gremlin-groovy` as Gremlin Server's default script engine for remote script execution, and Groovy is disabled by default, as the [TinkerPop 4.0 upgrade notes](https://tinkerpop.apache.org/docs/4.0.0-beta.3/upgrade/#_more_secure_gremlin_server) describe.
 
-When Graph Explorer connects to a server with Groovy enabled:
+Graph Explorer 3.4 and later send every Gremlin query to the `gremlin-lang` engine, with nothing to configure. A TinkerPop 3.x Gremlin Server runs the engine a request names, including `gremlin-lang` when its configuration lists only `gremlin-groovy`, so Graph Explorer works whether or not the server also runs Groovy. The proxy server forwards only `gremlin-lang` queries and rejects any other `language` with a 400. Graph Explorer 3.3 and earlier name no engine, so the server runs their queries on Groovy.
+
+Groovy stays the server operator's choice. TinkerPop 3.x Gremlin Server enables the `gremlin-groovy` engine by default, and it can run arbitrary code on the server, not only Gremlin traversals. Other databases built on Gremlin Server may enable it too. Older Graph Explorer releases and other clients can still reach Groovy, so when your server runs it:
 
 - Restrict access to Graph Explorer as strictly as access to the Gremlin Server host.
 - Keep Graph Explorer on an isolated network behind an authenticating layer, and never make it publicly reachable.
 - Let only Graph Explorer's proxy server reach Gremlin Server, with network rules you provide. A [direct connection](../../features/connections/#add-a-new-connection) needs each user's browser to reach Gremlin Server instead, which also lets every other site open in that browser reach it, even when the server listens only on `localhost`. Prefer a proxy connection, and choose a direct connection only for a server where you accept that risk.
 
-For server-side options, read [Security](https://tinkerpop.apache.org/docs/current/reference/#security) and [Protecting Script Execution](https://tinkerpop.apache.org/docs/current/reference/#script-execution) in the TinkerPop reference documentation. Amazon Neptune doesn't use the Groovy script engine.
+For more server-side options, read [Security](https://tinkerpop.apache.org/docs/3.8.2/reference/#security) in the TinkerPop reference documentation. Amazon Neptune doesn't use the Groovy script engine.
 
 ### Reference for access control layers
 
